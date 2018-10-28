@@ -84,12 +84,15 @@ namespace DOCXTests
         public void AnonymizeAuthorsTest()
         {
             const string testFile = @"testFiles/testComments.docx";
+            const string expectedFile = @"testFiles/testCommentsAnonymized.docx";
 
             using (var test = new DOCX.Docx(testFile))
             {
                 var result = test.AnonymizeComments();
                 Assert.True(result.status);
             }
+            
+            Assert.True(FileCompare(expectedFile, testFile));
         }
     }
 }

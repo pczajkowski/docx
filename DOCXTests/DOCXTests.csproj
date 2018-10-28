@@ -26,6 +26,9 @@
       <None Update="testFiles\testComments.docx">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+      <None Update="testFiles\testCommentsAnonymized.docx">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>
