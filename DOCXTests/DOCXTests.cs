@@ -79,5 +79,17 @@ namespace DOCXTests
 
             Assert.True(FileCompare(expectedFile, testFile));
         }
+
+        [Fact]
+        public void AnonymizeAuthorsTest()
+        {
+            const string testFile = @"testFiles/testComments.docx";
+
+            using (var test = new DOCX.Docx(testFile))
+            {
+                var result = test.AnonymizeComments();
+                Assert.True(result.status);
+            }
+        }
     }
 }

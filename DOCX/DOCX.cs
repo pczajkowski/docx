@@ -62,9 +62,13 @@ namespace DOCX
         {
             try
             {
-                using (StreamWriter sw = new StreamWriter(entry.Open()))
+                using (var sr = entry.Open())
                 {
-                    doc.Save(sw);
+                    sr.SetLength(doc.OuterXml.Length);
+                    using (StreamWriter sw = new StreamWriter(sr))
+                    {
+                        doc.Save(sw);
+                    }
                 }
             }
             catch (Exception e)
@@ -102,6 +106,50 @@ namespace DOCX
             "Can't access settings.xml!");
 
             var result = AddTrackRevisions(settings);
+            return !result.status ? (false, result.message) : (true, "OK");
+        }
+
+        private Dictionary<string, string> _authors = new Dictionary<string, string>();
+
+        private string AnonymizeName(string name)
+        {
+            if (_authors.TryGetValue(name, out var anonymousName))
+                return anonymousName;
+
+            anonymousName = $"Author{_authors.Count + 1}";
+            _authors.Add(name, anonymousName);
+            return anonymousName;
+        }
+        
+        private (bool status, string message) AnonymizeAuthors(ZipArchiveEntry comments)
+        {
+            var loadResult = GetXML(comments);
+            if (loadResult.doc == null)
+                return (false, loadResult.message);
+
+            XmlDocument doc = loadResult.doc;
+
+            var commentNodes = doc.SelectNodes("//w:comment", _ns);
+            if (commentNodes == null)
+                return (false, "There are no comments!");
+
+            foreach (XmlNode node in commentNodes)
+            {
+                var author = node.Attributes["w:author"];
+                author.Value = AnonymizeName(author.Value);
+            }
+
+            return SaveXML(doc, comments);
+        }
+        
+        public (bool status, string message) AnonymizeComments()
+        {
+            ZipArchiveEntry comments = _zip.GetEntry(@"word/comments.xml");
+            if (comments == null)
+                return (false,
+                    "Can't access comments.xml!");
+
+            var result = AnonymizeAuthors(comments);
             return !result.status ? (false, result.message) : (true, "OK");
         }
 
