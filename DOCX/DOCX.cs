@@ -11,7 +11,6 @@ namespace DOCX
     public class Docx : IDisposable
     {
         private readonly ZipArchive _zip;
-        private readonly string _zipPath;
         private readonly string _authorsJson;
         private readonly XmlNamespaceManager _ns = new XmlNamespaceManager(new NameTable());
 
@@ -31,8 +30,7 @@ namespace DOCX
         public Docx(string path)
         {
             _zip = ZipFile.Open(path, ZipArchiveMode.Update);
-            _zipPath = path;
-            _authorsJson = Path.ChangeExtension(_zipPath, "json");
+            _authorsJson = Path.ChangeExtension(path, "json");
             LoadNamespaces();
         }
 
