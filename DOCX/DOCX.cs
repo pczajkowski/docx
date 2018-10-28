@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Xml;
+using Newtonsoft.Json;
 
 namespace DOCX
 {
     public class Docx : IDisposable
     {
         private readonly ZipArchive _zip;
+        private readonly string _zipPath;
         private readonly XmlNamespaceManager _ns = new XmlNamespaceManager(new NameTable());
 
         private readonly Dictionary<string, string> _namespaces = new Dictionary<string, string>
@@ -27,6 +29,7 @@ namespace DOCX
         public Docx(string path)
         {
             _zip = ZipFile.Open(path, ZipArchiveMode.Update);
+            _zipPath = path;
             LoadNamespaces();
         }
 
@@ -142,6 +145,23 @@ namespace DOCX
             return SaveXML(doc, comments);
         }
         
+        private void SaveAuthors()
+        {
+            string path = Path.ChangeExtension(_zipPath, "json");
+            
+            using (StreamWriter sw = new StreamWriter(path))
+            using (JsonWriter writer = new JsonTextWriter(sw))
+            {
+                JsonSerializer serializer = new JsonSerializer
+                {
+                    NullValueHandling = NullValueHandling.Ignore
+                };
+
+                serializer.Serialize(writer, _authors);
+            }
+        }
+
+        
         public (bool status, string message) AnonymizeComments()
         {
             ZipArchiveEntry comments = _zip.GetEntry(@"word/comments.xml");
@@ -150,7 +170,10 @@ namespace DOCX
                     "Can't access comments.xml!");
 
             var result = AnonymizeAuthors(comments);
-            return !result.status ? (false, result.message) : (true, "OK");
+            if (!result.status) return (false, result.message);
+            
+            SaveAuthors();
+            return (true, "OK");
         }
 
         public void Dispose()
