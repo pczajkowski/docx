@@ -81,7 +81,7 @@ namespace DOCXTests
         }
 
         [Fact]
-        public void AnonymizeAuthorsTest()
+        public void AnonymizeCommentsTest()
         {
             const string testFile = @"testFiles/testComments.docx";
             const string expectedFile = @"testFiles/testCommentsAnonymized.docx";
