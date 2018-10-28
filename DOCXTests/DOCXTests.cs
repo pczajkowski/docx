@@ -5,14 +5,12 @@ namespace DOCXTests
 {
     public class DocxTests
     {
-        private bool FileCompare(string file1, string file2)
+        private static bool FileCompare(string file1, string file2)
         {
             // Borrowed from https://stackoverflow.com/questions/7931304/comparing-two-files-in-c-sharp#7931353
 
             int file1Byte;
             int file2Byte;
-            FileStream fs1;
-            FileStream fs2;
 
             // Determine if the same file was referenced two times.
             if (file1 == file2)
@@ -22,8 +20,8 @@ namespace DOCXTests
             }
 
             // Open the two files.
-            fs1 = new FileStream(file1, FileMode.Open, FileAccess.Read);
-            fs2 = new FileStream(file2, FileMode.Open, FileAccess.Read);
+            var fs1 = new FileStream(file1, FileMode.Open, FileAccess.Read);
+            var fs2 = new FileStream(file2, FileMode.Open, FileAccess.Read);
 
             // Check the file sizes. If they are not the same, the files 
             // are not the same.
@@ -61,8 +59,8 @@ namespace DOCXTests
         [Fact]
         public void EnableTrackedChangesTest()
         {
-            string testFile = @"testFiles/notTracked.docx";
-            string expectedFile = @"testFiles/tracked.docx";
+            const string testFile = @"testFiles/notTracked.docx";
+            const string expectedFile = @"testFiles/tracked.docx";
 
             using (var test = new DOCX.Docx(testFile))
             {
