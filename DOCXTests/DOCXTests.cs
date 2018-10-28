@@ -1,4 +1,5 @@
 using System.IO;
+using System.IO.Compression;
 using Xunit;
 
 namespace DOCXTests
@@ -62,10 +63,14 @@ namespace DOCXTests
             const string testFile = @"testFiles/notTracked.docx";
             const string expectedFile = @"testFiles/tracked.docx";
 
-            using (var test = new DOCX.Docx(testFile))
+
+            using (var zip = ZipFile.Open(testFile, ZipArchiveMode.Update))
             {
-                var result = test.EnableTrackedChanges();
-                Assert.True(result.status);
+                using (var test = new DOCX.Docx(zip))
+                {
+                    var result = test.EnableTrackedChanges();
+                    Assert.True(result.status);
+                }
             }
 
             Assert.True(FileCompare(expectedFile, testFile));
