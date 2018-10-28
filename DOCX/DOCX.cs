@@ -148,9 +148,15 @@ namespace DOCX
             return SaveXML(doc, comments);
         }
         
-        private void SaveAuthors()
-        {           
-            using (StreamWriter sw = new StreamWriter(_authorsJson))
+        private bool SaveAuthors(string path = null)
+        {
+            path = !string.IsNullOrEmpty(path) ? path : 
+                !string.IsNullOrEmpty(_authorsJson) ? _authorsJson : null;
+            
+            if (string.IsNullOrEmpty(path))
+                return false;
+            
+            using (StreamWriter sw = new StreamWriter(path))
             using (JsonWriter writer = new JsonTextWriter(sw))
             {
                 JsonSerializer serializer = new JsonSerializer
@@ -160,10 +166,12 @@ namespace DOCX
 
                 serializer.Serialize(writer, _authors);
             }
+
+            return true;
         }
 
         
-        public (bool status, string message) AnonymizeComments()
+        public (bool status, string message) AnonymizeComments(string path = null)
         {
             ZipArchiveEntry comments = _zip.GetEntry(@"word/comments.xml");
             if (comments == null)
@@ -172,9 +180,8 @@ namespace DOCX
 
             var result = AnonymizeAuthors(comments);
             if (!result.status) return (false, result.message);
-            
-            SaveAuthors();
-            return (true, "OK");
+
+            return !SaveAuthors(path) ? (false, $"Problem saving authors to {path}!") : (true, "OK");
         }
         
         private bool LoadAuthors(string path=null)
@@ -229,10 +236,7 @@ namespace DOCX
                     "Can't access comments.xml!");
 
             var result = DeanonymizeAuthors(comments);
-            if (!result.status) return (false, result.message);
-            
-            SaveAuthors();
-            return (true, "OK");
+            return !result.status ? (false, result.message) : (true, "OK");
         }
 
 
