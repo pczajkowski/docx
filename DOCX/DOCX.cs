@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Xml;
 using Newtonsoft.Json;
+using System.Linq;
 
 namespace DOCX
 {
@@ -11,6 +12,7 @@ namespace DOCX
     {
         private readonly ZipArchive _zip;
         private readonly string _zipPath;
+        private readonly string _authorsJson;
         private readonly XmlNamespaceManager _ns = new XmlNamespaceManager(new NameTable());
 
         private readonly Dictionary<string, string> _namespaces = new Dictionary<string, string>
@@ -30,6 +32,7 @@ namespace DOCX
         {
             _zip = ZipFile.Open(path, ZipArchiveMode.Update);
             _zipPath = path;
+            _authorsJson = Path.ChangeExtension(_zipPath, "json");
             LoadNamespaces();
         }
 
@@ -146,10 +149,8 @@ namespace DOCX
         }
         
         private void SaveAuthors()
-        {
-            string path = Path.ChangeExtension(_zipPath, "json");
-            
-            using (StreamWriter sw = new StreamWriter(path))
+        {           
+            using (StreamWriter sw = new StreamWriter(_authorsJson))
             using (JsonWriter writer = new JsonTextWriter(sw))
             {
                 JsonSerializer serializer = new JsonSerializer
@@ -175,6 +176,65 @@ namespace DOCX
             SaveAuthors();
             return (true, "OK");
         }
+        
+        private bool LoadAuthors(string path=null)
+        {
+            if (string.IsNullOrEmpty(path))
+                if (File.Exists(_authorsJson))
+                    path = _authorsJson;
+                else
+                    return false;
+            
+            using (StreamReader rd = new StreamReader(path))
+            {
+                string json = rd.ReadToEnd();
+                _authors = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+            }
+
+            return _authors.Count > 0;
+        }
+        
+        private (bool status, string message) DeanonymizeAuthors(ZipArchiveEntry comments)
+        {
+            var loadResult = GetXML(comments);
+            if (loadResult.doc == null)
+                return (false, loadResult.message);
+
+            XmlDocument doc = loadResult.doc;
+
+            var commentNodes = doc.SelectNodes("//w:comment", _ns);
+            if (commentNodes == null)
+                return (false, "There are no comments!");
+
+            foreach (XmlNode node in commentNodes)
+            {
+                var author = node.Attributes["w:author"];
+                if (_authors.TryGetValue(author.Value, out var name))
+                    author.Value = name;
+            }
+
+            return SaveXML(doc, comments);
+        }
+        
+        public (bool status, string message) DeanonymizeComments(string path=null)
+        {
+            if (!LoadAuthors(path))
+                return (false, $"Can't load authors from {path}!");
+
+            _authors = _authors.ToDictionary(x => x.Value, x => x.Key);
+            
+            ZipArchiveEntry comments = _zip.GetEntry(@"word/comments.xml");
+            if (comments == null)
+                return (false,
+                    "Can't access comments.xml!");
+
+            var result = DeanonymizeAuthors(comments);
+            if (!result.status) return (false, result.message);
+            
+            SaveAuthors();
+            return (true, "OK");
+        }
+
 
         public void Dispose()
         {

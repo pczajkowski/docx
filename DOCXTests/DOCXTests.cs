@@ -81,10 +81,11 @@ namespace DOCXTests
         }
 
         [Fact]
-        public void AnonymizeCommentsTest()
+        public void AnonymizeAndDeanonymizeCommentsTest()
         {
             const string testFile = @"testFiles/testComments.docx";
-            const string expectedFile = @"testFiles/testCommentsAnonymized.docx";
+            const string expectedAnonymized = @"testFiles/testCommentsAnonymized.docx";
+            const string expectedDeanonymized = @"testFiles/testCommentsDeanonymized.docx";
 
             using (var test = new DOCX.Docx(testFile))
             {
@@ -92,7 +93,15 @@ namespace DOCXTests
                 Assert.True(result.status);
             }
             
-            Assert.True(FileCompare(expectedFile, testFile));
+            Assert.True(FileCompare(expectedAnonymized, testFile));
+            
+            using (var test = new DOCX.Docx(testFile))
+            {
+                var result = test.DeanonymizeComments();
+                Assert.True(result.status);
+            }
+            
+            Assert.True(FileCompare(expectedDeanonymized, testFile));
         }
     }
 }
