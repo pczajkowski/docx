@@ -20,16 +20,7 @@
       <None Update="testFiles\notTracked.docx">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
-      <None Update="testFiles\tracked.docx">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
       <None Update="testFiles\testComments.docx">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-      <None Update="testFiles\testCommentsAnonymized.docx">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-      <None Update="testFiles\testCommentsDeanonymized.docx">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
     </ItemGroup>
