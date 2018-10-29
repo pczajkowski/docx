@@ -145,14 +145,15 @@ namespace DOCX
 
             return SaveXML(doc, comments);
         }
-        
+
         private bool SaveAuthors(string path = null)
         {
-            path = !string.IsNullOrEmpty(path) ? path : 
-                !string.IsNullOrEmpty(_authorsJson) ? _authorsJson : null;
-            
-            if (string.IsNullOrEmpty(path))
-                return false;
+            if (string.IsNullOrEmpty(path)) {
+                if (!string.IsNullOrEmpty(_authorsJson))
+                    path = _authorsJson;
+                else
+                    return false;
+            }
             
             using (StreamWriter sw = new StreamWriter(path))
             using (JsonWriter writer = new JsonTextWriter(sw))
