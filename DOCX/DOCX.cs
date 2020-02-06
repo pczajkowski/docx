@@ -13,31 +13,24 @@ namespace DOCX
         private readonly ZipArchive _zip;
         private readonly string _authorsJson;
         private readonly XmlNamespaceManager _ns = new XmlNamespaceManager(new NameTable());
+        private readonly string _wNamespace = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 
-        private readonly Dictionary<string, string> _namespaces = new Dictionary<string, string>
+        private void LoadNamespace()
         {
-            {"w",  "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
-        };
-
-        private void LoadNamespaces()
-        {
-            foreach (var item in _namespaces)
-            {
-                _ns.AddNamespace(item.Key, item.Value);
-            }
+			_ns.AddNamespace("w", _wNamespace);
         }
 
         public Docx(string path)
         {
             _zip = ZipFile.Open(path, ZipArchiveMode.Update);
             _authorsJson = Path.ChangeExtension(path, "json");
-            LoadNamespaces();
+            LoadNamespace();
         }
 
         public Docx(ZipArchive zipArchive)
         {
             _zip = zipArchive;
-            LoadNamespaces();
+            LoadNamespace();
         }
 
         private (XmlDocument doc, string message) GetXML(ZipArchiveEntry entry)
@@ -93,7 +86,7 @@ namespace DOCX
 
             if (doc.SelectSingleNode("//w:trackRevisions", _ns) != null) return (true, "No change needed.");
 
-            XmlElement trackRevisions = doc.CreateElement("w", "trackRevisions", _namespaces["w"]);
+            XmlElement trackRevisions = doc.CreateElement("w", "trackRevisions", _wNamespace);
             if (doc.DocumentElement == null)
                 return (false, "No root element in settings.xml!");
 
