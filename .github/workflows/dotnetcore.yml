@@ -16,4 +16,4 @@ jobs:
     - name: Test
       run: dotnet test DOCXTests/
     - name: Build with dotnet
-      run: ddotnet build --configuration Release --framework netcoreapp3.1 DOCX/
+      run: dotnet build --configuration Release --framework netcoreapp3.1 DOCX/
