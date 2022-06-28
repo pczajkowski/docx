@@ -1,11 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>netcoreapp3.1;net472</TargetFrameworks>
+		<TargetFramework>net6</TargetFramework>
 	</PropertyGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
 		<Reference Include="System.IO.Compression" />

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Xml;
-using Newtonsoft.Json;
 using System.Linq;
+using System.Text.Json;
 
 namespace DOCX
 {
@@ -17,7 +17,7 @@ namespace DOCX
 
         private void LoadNamespace()
         {
-			_ns.AddNamespace("w", _wNamespace);
+            _ns.AddNamespace("w", _wNamespace);
         }
 
         public Docx(string path)
@@ -117,7 +117,7 @@ namespace DOCX
             _authors.Add(name, anonymousName);
             return anonymousName;
         }
-        
+
         private (bool status, string message) AnonymizeAuthors(ZipArchiveEntry comments)
         {
             var loadResult = GetXML(comments);
@@ -141,28 +141,23 @@ namespace DOCX
 
         private bool SaveAuthors(string path = null)
         {
-            if (string.IsNullOrEmpty(path)) {
+            if (string.IsNullOrEmpty(path))
+            {
                 if (!string.IsNullOrEmpty(_authorsJson))
                     path = _authorsJson;
                 else
                     return false;
             }
-            
-            using (StreamWriter sw = new StreamWriter(path))
-            using (JsonWriter writer = new JsonTextWriter(sw))
-            {
-                JsonSerializer serializer = new JsonSerializer
-                {
-                    NullValueHandling = NullValueHandling.Ignore
-                };
 
-                serializer.Serialize(writer, _authors);
+            using (var fs = File.OpenWrite(path))
+            {
+                JsonSerializer.Serialize(fs, _authors, typeof(Dictionary<string, string>));
             }
 
             return true;
         }
 
-        
+
         public (bool status, string message) AnonymizeComments(string path = null)
         {
             ZipArchiveEntry comments = _zip.GetEntry(@"word/comments.xml");
@@ -175,24 +170,23 @@ namespace DOCX
 
             return !SaveAuthors(path) ? (false, $"Problem saving authors to {path}!") : (true, "OK");
         }
-        
-        private bool LoadAuthors(string path=null)
+
+        private bool LoadAuthors(string path = null)
         {
             if (string.IsNullOrEmpty(path))
                 if (File.Exists(_authorsJson))
                     path = _authorsJson;
                 else
                     return false;
-            
-            using (StreamReader rd = new StreamReader(path))
+
+            using (var fs = File.OpenRead(path))
             {
-                string json = rd.ReadToEnd();
-                _authors = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+                _authors = JsonSerializer.Deserialize<Dictionary<string, string>>(fs);
             }
 
             return _authors.Count > 0;
         }
-        
+
         private (bool status, string message) DeanonymizeAuthors(ZipArchiveEntry comments)
         {
             var loadResult = GetXML(comments);
@@ -214,14 +208,14 @@ namespace DOCX
 
             return SaveXML(doc, comments);
         }
-        
-        public (bool status, string message) DeanonymizeComments(string path=null)
+
+        public (bool status, string message) DeanonymizeComments(string path = null)
         {
             if (!LoadAuthors(path))
                 return (false, $"Can't load authors from {path}!");
 
             _authors = _authors.ToDictionary(x => x.Value, x => x.Key);
-            
+
             ZipArchiveEntry comments = _zip.GetEntry(@"word/comments.xml");
             if (comments == null)
                 return (false,
